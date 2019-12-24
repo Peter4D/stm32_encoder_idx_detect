@@ -52,7 +52,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "sw_timer.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -111,7 +111,9 @@ void Error_Handler(void);
 #define idx_int3_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
-#define LED_TICK_TM     (500u) // ms
+#define LED_TICK_TM     (2000u) // ms
+
+#define TASK_PERIODE    (2000u)
 
 /* USER CODE END Private defines */
 

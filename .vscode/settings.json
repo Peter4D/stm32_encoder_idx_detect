@@ -1,6 +1,7 @@
 {
     "editor.detectIndentation": false,
     "files.associations": {
-        "usart.h": "c"
+        "usart.h": "c",
+        "crc8.h": "c"
     }
 }

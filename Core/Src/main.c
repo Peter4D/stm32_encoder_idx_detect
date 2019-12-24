@@ -46,6 +46,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+//#include "sw_timer.h"
 
 /* USER CODE END Includes */
 
@@ -67,6 +68,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+static uint8_t uart_test_msg[] = " hello indexFind..\n\r";
+static sw_timer_t xTaskTimer;
 
 /* USER CODE END PV */
 
@@ -74,10 +77,19 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
+void taskTimer_cb(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void taskTimer_cb(void) {
+    HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+    HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
+
+    /* set timer for new cycle */
+    swTimer.set(&xTaskTimer, TASK_PERIODE);
+}
 
 /* USER CODE END 0 */
 
@@ -89,7 +101,6 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
     static uint32_t led_last_tick = 0;
-    static uint8_t uart_test_msg[] = " hello indexFind\n\r";
 
   /* USER CODE END 1 */
 
@@ -99,6 +110,10 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+
+  swTimer_init(&xTaskTimer);
+  swTimer.attach_callBack(&xTaskTimer, taskTimer_cb);
+  swTimer.set(&xTaskTimer, TASK_PERIODE);
 
   /* USER CODE END Init */
 
@@ -124,11 +139,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        if( (HAL_GetTick() - led_last_tick) > LED_TICK_TM ){
-            led_last_tick = HAL_GetTick();
-            HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-            HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
-        }
+        // if( (HAL_GetTick() - led_last_tick) > LED_TICK_TM ){
+        //     led_last_tick = HAL_GetTick();
+        //     HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+        //     HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
+        // }
     }
   /* USER CODE END 3 */
 }
