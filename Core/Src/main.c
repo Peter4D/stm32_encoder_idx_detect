@@ -112,19 +112,39 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     /* test external interrupt */
-    static uint8_t ext_int_msg[10] = {0};
-    static uint8_t pinNum_str[5] = {0};
-    uint8_t i = 0;
+    static uint8_t ext_int_msg[15] = {0};
+    static uint8_t pinNum_str[6] = {0};
 
-    for (i = 0; i < 15; ++i){
-        if(GPIO_Pin == 1) {
+
+
+    switch (GPIO_Pin)
+    {
+        case idx_int0_Pin:
+        {
+            strcpy(pinNum_str, "int_0");
             break;
         }
-        GPIO_Pin >>= 1;
+        case idx_int1_Pin:
+        {
+            strcpy(pinNum_str, "int_1");
+            break;
+        }
+        case idx_int2_Pin:
+        {
+            strcpy(pinNum_str, "int_2");
+            break;
+        }
+        case idx_int3_Pin:
+        {
+            strcpy(pinNum_str, "int_3");
+            break;
+        }
+        default:
+            break;
     }
 
     strcpy(ext_int_msg, "Pin: ");
-    num2str(i, pinNum_str);
+    //num2str(i, pinNum_str);
     strcat(ext_int_msg, pinNum_str);
     strcat(ext_int_msg, "\n\r");
 

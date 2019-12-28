@@ -127,12 +127,17 @@ typedef struct _gpio_io_desc_t
     uint16_t        pin;
 }gpio_io_desc_t;
 
+typedef enum{
+    IDLE,
+    WAIT_IDX
+}idx_ch_stateMchn_t;
+
 typedef struct _idx_ch_desc_t
 {
     uint8_t             ch_name[15];
     gpio_io_desc_t      gpio_io_input;
     gpio_io_desc_t      gpio_io_out;
-    //idx_ch_stateMchn_t  stateMchine;
+    idx_ch_stateMchn_t  stateMchine;
 };
 
 
