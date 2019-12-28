@@ -79,22 +79,85 @@ void SystemClock_Config(void);
 
 void taskTimer_cb(void);
 
+void ch0_swTmr_cb(void);
+void ch1_swTmr_cb(void);
+void ch2_swTmr_cb(void);
+void ch3_swTmr_cb(void);
+
 //void handle_sensors(index_ch_desc_t *index_ch_desc);
-
-uint32_t read_ch0_input(void);
-uint32_t read_ch1_input(void);
-uint32_t read_ch2_input(void);
-uint32_t read_ch3_input(void);
-
-void write_ch0_out(void);
-void write_ch1_out(void);
-void write_ch2_out(void);
-void write_ch3_out(void);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+typedef struct _gpio_io_desc_t
+{
+    GPIO_TypeDef    *port;
+    uint16_t        pin;
+}gpio_io_desc_t;
+
+typedef enum{
+    IDLE,
+    WAIT_IDX
+}idx_ch_stateMchn_t;
+
+struct _idx_ch_desc_t
+{
+    uint8_t             ch_name[15];
+    gpio_io_desc_t      gpio_io_input;
+    gpio_io_desc_t      gpio_io_out;
+    idx_ch_stateMchn_t  stateMchine;
+    sw_timer_t          swtimer;
+    uint32_t            delayTm;
+    void(*sw_tmr_cb)(void);
+}idx_ch_array[] = {
+    {
+        "ch_0",
+        {END_SW0_GPIO_Port, END_SW0_Pin},
+        {out0_GPIO_Port, out0_Pin},
+        IDLE,
+        {0},
+        1000,
+        &ch0_swTmr_cb
+    },
+    {
+        "ch_1",
+        {END_SW1_GPIO_Port, END_SW1_Pin},
+        {out1_GPIO_Port, out1_Pin},
+        IDLE,
+        {0},
+        1000,
+        &ch1_swTmr_cb
+    },
+    {
+        "ch_2",
+        {END_SW2_GPIO_Port, END_SW2_Pin},
+        {out2_GPIO_Port, out2_Pin},
+        IDLE,
+        {0},
+        1000,
+        &ch2_swTmr_cb
+    },
+    {
+        "ch_3",
+        {END_SW3_GPIO_Port, END_SW3_Pin},
+        {out3_GPIO_Port, out3_Pin},
+        IDLE,
+        {0},
+        1000,
+        &ch3_swTmr_cb
+    }
+};
+
+void handle_channels(struct _idx_ch_desc_t *ch);
+
+// sw_timer_t swTmr_ch0 = {0};
+// sw_timer_t swTmr_ch1 = {0};
+// sw_timer_t swTmr_ch2 = {0};
+// sw_timer_t swTmr_ch3 = {0};
+
+
 void taskTimer_cb(void) {
     //static uint32_t cnt = 0; 
 
@@ -161,7 +224,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-    static uint32_t led_last_tick = 0;
+    static uint32_t tick_old = 0;
+    uint8_t nCh = 0;
 
   /* USER CODE END 1 */
 
@@ -175,6 +239,8 @@ int main(void)
   swTimer_init(&xTaskTimer);
   swTimer.attach_callBack(&xTaskTimer, taskTimer_cb);
   swTimer.set(&xTaskTimer, TASK_PERIODE);
+
+  nCh = sizeof(idx_ch_array)/sizeof(idx_ch_array[0]);
 
   /* USER CODE END Init */
 
@@ -192,6 +258,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
 
+  swTimer_init(&idx_ch_array[0].swtimer);
+  swTimer_init(&idx_ch_array[1].swtimer);
+  swTimer_init(&idx_ch_array[2].swtimer);
+  swTimer_init(&idx_ch_array[3].swtimer);
+  
+  swTimer.attach_callBack(&idx_ch_array[0].swtimer, idx_ch_array[0].sw_tmr_cb);
+  swTimer.attach_callBack(&idx_ch_array[1].swtimer, idx_ch_array[1].sw_tmr_cb);
+  swTimer.attach_callBack(&idx_ch_array[2].swtimer, idx_ch_array[2].sw_tmr_cb);
+  swTimer.attach_callBack(&idx_ch_array[3].swtimer, idx_ch_array[3].sw_tmr_cb);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -201,6 +277,16 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+        if( (HAL_GetTick() - tick_old) > CH_PULL_READ_PER){
+            uint8_t i = 0;
+            
+            /* pull read channels limit switch */
+            for(;i < nCh; ++i) {
+
+            }
+
+            tick_old = HAL_GetTick();
+        }
     }
   /* USER CODE END 3 */
 }
@@ -241,10 +327,45 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-uint32_t read_ch0_input(void){
-    GPIO_PinState pinState;
-    pinState = HAL_GPIO_ReadPin(END_SW0_GPIO_Port, END_SW0_Pin);
-    return (uint32_t)pinState;
+void handle_channels(struct _idx_ch_desc_t *ch){
+    uint32_t limit_sw_state = 0;
+
+    limit_sw_state = HAL_GPIO_ReadPin(ch->gpio_io_input.port, ch->gpio_io_input.pin);
+    if(limit_sw_state == INPUT_ON && ch->stateMchine == IDLE){
+        ch->stateMchine = WAIT_IDX;
+        /*set out and start swtimer */
+        HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_SET);
+        swTimer.set(&ch->swtimer, ch->delayTm);
+    }
+}
+
+
+void ch0_swTmr_cb(void){
+    struct _idx_ch_desc_t *ch = &idx_ch_array[0];
+
+    HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_RESET);
+    ch->stateMchine = IDLE;
+}
+
+void ch1_swTmr_cb(void){
+    struct _idx_ch_desc_t *ch = &idx_ch_array[1];
+
+    HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_RESET);
+    ch->stateMchine = IDLE;
+}
+
+void ch2_swTmr_cb(void){
+    struct _idx_ch_desc_t *ch = &idx_ch_array[2];
+
+    HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_RESET);
+    ch->stateMchine = IDLE;
+}
+
+void ch3_swTmr_cb(void){
+    struct _idx_ch_desc_t *ch = &idx_ch_array[3];
+
+    HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_RESET);
+    ch->stateMchine = IDLE;
 }
 
 /* USER CODE END 4 */
