@@ -84,11 +84,23 @@ void taskTimer_cb(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void taskTimer_cb(void) {
-    HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+    //HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
     HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
 
     /* set timer for new cycle */
     swTimer.set(&xTaskTimer, TASK_PERIODE);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    /* #debug simple test code */
+    (void)htim;
+    
+    static uint32_t cnt = 0;
+    if(cnt >= 10000) {
+        cnt = 0;
+        HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+    }
+    cnt++;
 }
 
 /* USER CODE END 0 */
@@ -129,6 +141,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim2);
 
   /* USER CODE END 2 */
 
