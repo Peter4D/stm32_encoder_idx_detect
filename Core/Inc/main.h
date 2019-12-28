@@ -53,6 +53,9 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "sw_timer.h"
+#include "num_str_convert.h"
+
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -118,7 +121,7 @@ void Error_Handler(void);
 
 #define TASK_PERIODE    (uint32_t)(1000 * SW_TMR_CNT_PER_MS)
 
-typdef struct _gpio_io_desc_t
+typedef struct _gpio_io_desc_t
 {
     GPIO_TypeDef    *port;
     uint16_t        pin;
@@ -129,7 +132,7 @@ typedef struct _idx_ch_desc_t
     uint8_t             ch_name[15];
     gpio_io_desc_t      gpio_io_input;
     gpio_io_desc_t      gpio_io_out;
-    idx_ch_stateMchn_t  stateMchine;
+    //idx_ch_stateMchn_t  stateMchine;
 };
 
 

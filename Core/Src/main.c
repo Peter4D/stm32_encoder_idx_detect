@@ -68,7 +68,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static uint8_t uart_test_msg[] = " hello indexFind..\n\r";
+static uint8_t uart_test_msg[] = "hello indexFind: \n\r";
 static sw_timer_t xTaskTimer;
 
 /* USER CODE END PV */
@@ -79,7 +79,7 @@ void SystemClock_Config(void);
 
 void taskTimer_cb(void);
 
-void handle_sensors(index_ch_desc_t *index_ch_desc);
+//void handle_sensors(index_ch_desc_t *index_ch_desc);
 
 uint32_t read_ch0_input(void);
 uint32_t read_ch1_input(void);
@@ -96,6 +96,8 @@ void write_ch3_out(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void taskTimer_cb(void) {
+    //static uint32_t cnt = 0; 
+
     HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
     HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
 
@@ -110,6 +112,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     /* test external interrupt */
+    static uint8_t ext_int_msg[10] = {0};
+    static uint8_t pinNum_str[5] = {0};
+    uint8_t i = 0;
+
+    for (i = 0; i < 15; ++i){
+        if(GPIO_Pin == 1) {
+            break;
+        }
+        GPIO_Pin >>= 1;
+    }
+
+    strcpy(ext_int_msg, "Pin: ");
+    num2str(i, pinNum_str);
+    strcat(ext_int_msg, pinNum_str);
+    strcat(ext_int_msg, "\n\r");
+
+    HAL_UART_Transmit_IT(&huart1, ext_int_msg, sizeof(ext_int_msg));
 
 }
 
