@@ -111,9 +111,27 @@ void Error_Handler(void);
 #define idx_int3_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
-#define LED_TICK_TM     (2000u) // ms
+/* because timer resolution is 0.1 ms */
+#define SW_TMR_CNT_PER_MS      10
 
-#define TASK_PERIODE    (2000u)
+#define LED_TICK_TM     (2000u)
+
+#define TASK_PERIODE    (uint32_t)(1000 * SW_TMR_CNT_PER_MS)
+
+typdef struct _gpio_io_desc_t
+{
+    GPIO_TypeDef    *port;
+    uint16_t        pin;
+}gpio_io_desc_t;
+
+typedef struct _idx_ch_desc_t
+{
+    uint8_t             ch_name[15];
+    gpio_io_desc_t      gpio_io_input;
+    gpio_io_desc_t      gpio_io_out;
+    idx_ch_stateMchn_t  stateMchine;
+};
+
 
 /* USER CODE END Private defines */
 

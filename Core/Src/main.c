@@ -79,12 +79,24 @@ void SystemClock_Config(void);
 
 void taskTimer_cb(void);
 
+void handle_sensors(index_ch_desc_t *index_ch_desc);
+
+uint32_t read_ch0_input(void);
+uint32_t read_ch1_input(void);
+uint32_t read_ch2_input(void);
+uint32_t read_ch3_input(void);
+
+void write_ch0_out(void);
+void write_ch1_out(void);
+void write_ch2_out(void);
+void write_ch3_out(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void taskTimer_cb(void) {
-    //HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+    HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
     HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
 
     /* set timer for new cycle */
@@ -92,15 +104,13 @@ void taskTimer_cb(void) {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    /* #debug simple test code */
-    (void)htim;
-    
-    static uint32_t cnt = 0;
-    if(cnt >= 10000) {
-        cnt = 0;
-        HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-    }
-    cnt++;
+    /* drive software timers: resolition is 0.1 ms */
+    swTimer_tick();
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    /* test external interrupt */
+
 }
 
 /* USER CODE END 0 */
@@ -152,11 +162,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        // if( (HAL_GetTick() - led_last_tick) > LED_TICK_TM ){
-        //     led_last_tick = HAL_GetTick();
-        //     HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-        //     HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
-        // }
     }
   /* USER CODE END 3 */
 }
@@ -196,6 +201,12 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+uint32_t read_ch0_input(void){
+    GPIO_PinState pinState;
+    pinState = HAL_GPIO_ReadPin(END_SW0_GPIO_Port, END_SW0_Pin);
+    return (uint32_t)pinState;
+}
 
 /* USER CODE END 4 */
 
