@@ -178,40 +178,57 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     static uint8_t ext_int_msg[15] = {0};
     static uint8_t pinNum_str[6] = {0};
 
-
+    struct _idx_ch_desc_t *p_ch;
 
     switch (GPIO_Pin)
     {
         case idx_int0_Pin:
         {
+            /* #debug */
             strcpy(pinNum_str, "int_0");
+            p_ch = &idx_ch_array[0];
             break;
         }
         case idx_int1_Pin:
         {
+            /* #debug */
             strcpy(pinNum_str, "int_1");
+            p_ch = &idx_ch_array[1];
             break;
         }
         case idx_int2_Pin:
         {
+            /* #debug */
             strcpy(pinNum_str, "int_2");
+            p_ch = &idx_ch_array[2];
             break;
         }
         case idx_int3_Pin:
         {
+            /* #debug */
             strcpy(pinNum_str, "int_3");
+            p_ch = &idx_ch_array[3];
             break;
         }
         default:
+        {
+            p_ch = &idx_ch_array[0];
+            assert(0);
             break;
+        }
     }
 
+    swTimer.set(&p_ch->swtimer, p_ch->delayTm);
+
+    //==========================================================================
+    /* #debug */
     strcpy(ext_int_msg, "Pin: ");
     //num2str(i, pinNum_str);
     strcat(ext_int_msg, pinNum_str);
     strcat(ext_int_msg, "\n\r");
 
     HAL_UART_Transmit_IT(&huart1, ext_int_msg, sizeof(ext_int_msg));
+    //==========================================================================
 
 }
 
@@ -282,7 +299,7 @@ int main(void)
             
             /* pull read channels limit switch */
             for(;i < nCh; ++i) {
-
+                handle_channels(&idx_ch_array[i]);
             }
 
             tick_old = HAL_GetTick();
@@ -333,9 +350,8 @@ void handle_channels(struct _idx_ch_desc_t *ch){
     limit_sw_state = HAL_GPIO_ReadPin(ch->gpio_io_input.port, ch->gpio_io_input.pin);
     if(limit_sw_state == INPUT_ON && ch->stateMchine == IDLE){
         ch->stateMchine = WAIT_IDX;
-        /*set out and start swtimer */
+        /*set output; external interrupt will set off channel ! */
         HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_SET);
-        swTimer.set(&ch->swtimer, ch->delayTm);
     }
 }
 

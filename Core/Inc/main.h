@@ -54,6 +54,7 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "sw_timer.h"
 #include "num_str_convert.h"
+#include "assert_gorenje.h"
 
 #include <string.h>
 /* USER CODE END Includes */
@@ -114,7 +115,8 @@ void Error_Handler(void);
 #define idx_int3_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
-#define INPUT_ON        GPIO_PIN_SET
+//#define INPUT_ON        GPIO_PIN_SET
+#define INPUT_ON        GPIO_PIN_RESET
 
 /* because timer resolution is 0.1 ms */
 #define SW_TMR_CNT_PER_MS      10
