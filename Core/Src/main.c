@@ -118,7 +118,7 @@ struct _idx_ch_desc_t
         {out0_GPIO_Port, out0_Pin},
         IDLE,
         {0},
-        1000,
+        DELAY_AFTER_IDX_CH0,
         &ch0_swTmr_cb
     },
     {
@@ -127,7 +127,7 @@ struct _idx_ch_desc_t
         {out1_GPIO_Port, out1_Pin},
         IDLE,
         {0},
-        1000,
+        DELAY_AFTER_IDX_CH1,
         &ch1_swTmr_cb
     },
     {
@@ -136,7 +136,7 @@ struct _idx_ch_desc_t
         {out2_GPIO_Port, out2_Pin},
         IDLE,
         {0},
-        1000,
+        DELAY_AFTER_IDX_CH2,
         &ch2_swTmr_cb
     },
     {
@@ -145,7 +145,7 @@ struct _idx_ch_desc_t
         {out3_GPIO_Port, out3_Pin},
         IDLE,
         {0},
-        1000,
+        DELAY_AFTER_IDX_CH3,
         &ch3_swTmr_cb
     }
 };
@@ -162,8 +162,11 @@ void taskTimer_cb(void) {
     //static uint32_t cnt = 0; 
 
     HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-    HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
-
+    
+    #if ( DEBUG_MSG_ENABLE == 1 )
+        /* debug */
+        HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
+    #endif
     /* set timer for new cycle */
     swTimer.set(&xTaskTimer, TASK_PERIODE);
 }
@@ -184,29 +187,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     {
         case idx_int0_Pin:
         {
-            /* #debug */
-            strcpy(pinNum_str, "int_0");
+            #if ( DEBUG_MSG_ENABLE == 1 )
+                /* #debug */
+                strcpy(pinNum_str, "int_0");
+            #endif
             p_ch = &idx_ch_array[0];
             break;
         }
         case idx_int1_Pin:
         {
-            /* #debug */
-            strcpy(pinNum_str, "int_1");
+            #if ( DEBUG_MSG_ENABLE == 1 )
+                /* #debug */
+                strcpy(pinNum_str, "int_1");
+            #endif
             p_ch = &idx_ch_array[1];
             break;
         }
         case idx_int2_Pin:
         {
-            /* #debug */
-            strcpy(pinNum_str, "int_2");
+            #if ( DEBUG_MSG_ENABLE == 1 )
+                /* #debug */
+                strcpy(pinNum_str, "int_2");
+            #endif
             p_ch = &idx_ch_array[2];
             break;
         }
         case idx_int3_Pin:
         {
-            /* #debug */
-            strcpy(pinNum_str, "int_3");
+            #if ( DEBUG_MSG_ENABLE == 1 )
+                /* #debug */
+                strcpy(pinNum_str, "int_3");
+            #endif
             p_ch = &idx_ch_array[3];
             break;
         }
@@ -221,13 +232,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     swTimer.set(&p_ch->swtimer, p_ch->delayTm);
 
     //==========================================================================
-    /* #debug */
-    strcpy(ext_int_msg, "Pin: ");
-    //num2str(i, pinNum_str);
-    strcat(ext_int_msg, pinNum_str);
-    strcat(ext_int_msg, "\n\r");
-
-    HAL_UART_Transmit_IT(&huart1, ext_int_msg, sizeof(ext_int_msg));
+    #if ( DEBUG_MSG_ENABLE == 1 )
+        /* #debug */
+        strcpy(ext_int_msg, "Pin: ");
+        //num2str(i, pinNum_str);
+        strcat(ext_int_msg, pinNum_str);
+        strcat(ext_int_msg, "\n\r");
+    
+        HAL_UART_Transmit_IT(&huart1, ext_int_msg, sizeof(ext_int_msg));
+    #endif
     //==========================================================================
 
 }
