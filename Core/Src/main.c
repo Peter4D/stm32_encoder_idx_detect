@@ -47,6 +47,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 //#include "sw_timer.h"
+#include "num_str_convert.h"
 
 /* USER CODE END Includes */
 
@@ -68,7 +69,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static uint8_t uart_test_msg[] = "hello indexFind: \n\r";
+static uint8_t const uart_test_msg[] = "hello indexFind: \n\r";
+static uint8_t const uart_msg_err_cmd2long[] = " $Err:cmd to long: \n\r";
+
+
 static sw_timer_t xTaskTimer;
 
 /* USER CODE END PV */
@@ -151,14 +155,32 @@ struct _idx_ch_desc_t
     }
 };
 
-void SM_goToIdle(struct _idx_ch_desc_t *ch);
+typedef enum{
+    SM_RX_IDLE,
+    SM_RX_RECEIVE,
+    SM_RX_EXE,  // @todo remove: a the moment redundant state 
+}SM_Rx_sm_enum_t;
+
+struct _SM_Rx_desc_t{
+    SM_Rx_sm_enum_t state;
+    uint8_t Rx_buff[RX_CMD_BUFF_SIZE];
+    uint8_t Rx_cnt;
+    uint8_t Rx_char;
+}SM_Rx = {
+    SM_RX_IDLE,
+    {0},
+    0,
+    0
+};
 
 void handle_channels(struct _idx_ch_desc_t *ch);
+void SM_goToIdle(struct _idx_ch_desc_t *ch);
+
+void TASK_serial_cmd_decode(void);
 
 
 void taskTimer_cb(void) {
-    //static uint32_t cnt = 0; 
-
+    
     HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
     
     #if ( DEBUG_MSG_ENABLE == 1 )
@@ -264,11 +286,13 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
-  swTimer_init(&xTaskTimer);
-  swTimer.attach_callBack(&xTaskTimer, taskTimer_cb);
-  swTimer.set(&xTaskTimer, TASK_PERIODE);
+    /* set application heartBeat and serial debug printout task */
+    swTimer_init(&xTaskTimer);
+    swTimer.attach_callBack(&xTaskTimer, taskTimer_cb);
+    swTimer.set(&xTaskTimer, TASK_PERIODE);
 
-  nCh = sizeof(idx_ch_array)/sizeof(idx_ch_array[0]);
+    /* calculate numner of channels used in application */
+    nCh = sizeof(idx_ch_array)/sizeof(idx_ch_array[0]);
 
   /* USER CODE END Init */
 
@@ -295,6 +319,9 @@ int main(void)
   swTimer.attach_callBack(&idx_ch_array[1].swtimer, idx_ch_array[1].sw_tmr_cb);
   swTimer.attach_callBack(&idx_ch_array[2].swtimer, idx_ch_array[2].sw_tmr_cb);
   swTimer.attach_callBack(&idx_ch_array[3].swtimer, idx_ch_array[3].sw_tmr_cb);
+
+  /* enable Serial receive */
+  HAL_UART_Receive_IT(&huart1, &SM_Rx.Rx_char, 1);
 
   /* USER CODE END 2 */
 
@@ -355,6 +382,10 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+void TASK_serial_cmd_decode(void) {
+
+}
+
 void handle_channels(struct _idx_ch_desc_t *ch){
     uint32_t limit_sw_state = 0;
 
@@ -393,6 +424,58 @@ void ch3_swTmr_cb(void){
 void SM_goToIdle(struct _idx_ch_desc_t *ch) {
     HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_RESET);
     ch->stateMchine = IDLE;
+}
+
+void Rx_cmd_decode(struct _SM_Rx_desc_t *SM_Rx){
+    uint8_t *p_str = &SM_Rx->Rx_buff[0];
+    uint8_t ch_sel = 0;
+    int32_t delay_val = 0;
+
+    if(p_str[0] == 'c'){
+        if(p_str[1] >= '0' && p_str[1] <= '3') {
+            ch_sel = p_str[1] - '0';
+            str2num(&p_str[3], &delay_val);
+        }
+    }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    
+    switch (SM_Rx.state) {
+        case SM_RX_IDLE:
+        {
+            SM_Rx.state = SM_RX_RECEIVE;
+            SM_Rx.Rx_buff[SM_Rx.Rx_cnt++] = SM_Rx.Rx_char;
+            break;
+        }
+        case SM_RX_RECEIVE:
+        {
+            
+            if(SM_Rx.Rx_cnt >= RX_CMD_BUFF_SIZE) {
+                /* Rx cmd buffer overflow error go to idle inform user */
+                HAL_UART_Transmit_IT(&huart1, uart_msg_err_cmd2long, sizeof(uart_msg_err_cmd2long));
+                SM_Rx.Rx_cnt = 0;
+                SM_Rx.state = SM_RX_IDLE;
+                break;
+            }
+
+            /* check for temination character */
+            if(SM_Rx.Rx_char == '\r') {
+                /* decode */
+                SM_Rx.Rx_buff[SM_Rx.Rx_cnt] = 0x00; // zero terminate the string 
+                Rx_cmd_decode(&SM_Rx);
+                /* return to idle state */
+                SM_Rx.Rx_cnt = 0;
+                SM_Rx.state = SM_RX_IDLE;
+
+            }else{
+                SM_Rx.Rx_buff[SM_Rx.Rx_cnt++] = SM_Rx.Rx_char;
+            }
+            break;
+        }
+    }
+
+    HAL_UART_Receive_IT(&huart1, &SM_Rx.Rx_char, 1);
 }
 
 /* USER CODE END 4 */

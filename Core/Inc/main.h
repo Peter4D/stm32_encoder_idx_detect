@@ -117,6 +117,8 @@ void Error_Handler(void);
 
 #define DEBUG_MSG_ENABLE    (0)
 
+#define RX_CMD_BUFF_SIZE    30
+
 //#define INPUT_ON        GPIO_PIN_SET
 #define INPUT_ON        GPIO_PIN_RESET
 
