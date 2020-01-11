@@ -48,6 +48,7 @@
 /* USER CODE BEGIN Includes */
 //#include "sw_timer.h"
 #include "num_str_convert.h"
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -74,12 +75,16 @@ static uint8_t const uart_msg_err_cmd2long[] = " $Err:cmd to long: \n\r";
 
 
 static sw_timer_t xTaskTimer;
+static sw_timer_t xLed_tm;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+
+void blink_onboard_led(uint32_t time_ms);
+void led_tm_cb(void);
 
 void taskTimer_cb(void);
 
@@ -181,14 +186,27 @@ void TASK_serial_cmd_decode(void);
 
 void taskTimer_cb(void) {
     
-    HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-    
+    #if ( DEBUG_LED_HEART_BEAT_EN == 1)
+        HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+    #endif
+
     #if ( DEBUG_MSG_ENABLE == 1 )
         /* debug */
         HAL_UART_Transmit_IT(&huart1, uart_test_msg, sizeof(uart_test_msg));
     #endif
     /* set timer for new cycle */
     swTimer.set(&xTaskTimer, TASK_PERIODE);
+}
+
+void blink_onboard_led(uint32_t time_ms) {
+
+    HAL_GPIO_WritePin(led_GPIO_Port, led_Pin, LED_SET);
+    
+    swTimer.set(&xLed_tm, time_ms);
+}
+
+void led_tm_cb(void) {
+    HAL_GPIO_WritePin(led_GPIO_Port, led_Pin, LED_RESET);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -290,6 +308,10 @@ int main(void)
     swTimer_init(&xTaskTimer);
     swTimer.attach_callBack(&xTaskTimer, taskTimer_cb);
     swTimer.set(&xTaskTimer, TASK_PERIODE);
+
+    /* sw timer that control how long will led be on */
+    swTimer_init(&xLed_tm);
+    swTimer.attach_callBack(&xLed_tm, led_tm_cb);
 
     /* calculate numner of channels used in application */
     nCh = sizeof(idx_ch_array)/sizeof(idx_ch_array[0]);
@@ -430,14 +452,35 @@ void Rx_cmd_decode(struct _SM_Rx_desc_t *SM_Rx){
     uint8_t *p_str = &SM_Rx->Rx_buff[0];
     uint8_t ch_sel = 0;
     int32_t delay_val = 0;
+    static uint8_t ack_msg[10] = {0};
+    uint8_t ack_msg_size = 0;
 
     if(p_str[0] == 'c'){
         if(p_str[1] >= '0' && p_str[1] <= '3') {
             ch_sel = p_str[1] - '0';
-            str2num(&p_str[3], &delay_val);
+            if(str2num(&p_str[3], &delay_val) == 0) {
+                /* value is number OK*/
+                /* @todo in final version this need to be written into NVM */
+                idx_ch_array[ch_sel].delayTm = delay_val;
+                /*#debug*/
+                blink_onboard_led(1000);
+                /* #debug message */
+                num2str(delay_val, ack_msg);
+                ack_msg_size = strlen(ack_msg);
+                ack_msg[++ack_msg_size] = '\n';
+                HAL_UART_Transmit_IT(&huart1, ack_msg, ack_msg_size);
+            }else {
+                /* value is NaN error*/
+            }
+        }else{
+            /* channel select error */
         }
+    }else{
+        /* command error */
     }
 }
+//idx_ch_array
+
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     

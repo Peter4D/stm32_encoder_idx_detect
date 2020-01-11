@@ -2,6 +2,7 @@
     "editor.detectIndentation": false,
     "files.associations": {
         "usart.h": "c",
-        "crc8.h": "c"
+        "crc8.h": "c",
+        "num_str_convert.h": "c"
     }
 }

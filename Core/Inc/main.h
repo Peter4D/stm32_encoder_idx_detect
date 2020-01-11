@@ -115,12 +115,17 @@ void Error_Handler(void);
 #define idx_int3_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
-#define DEBUG_MSG_ENABLE    (0)
+#define DEBUG_MSG_ENABLE            0
+#define DEBUG_LED_HEART_BEAT_EN     0
 
 #define RX_CMD_BUFF_SIZE    30
 
 //#define INPUT_ON        GPIO_PIN_SET
 #define INPUT_ON        GPIO_PIN_RESET
+
+#define LED_SET         GPIO_PIN_RESET
+#define LED_RESET       GPIO_PIN_SET
+
 
 /* because timer resolution is 0.1 ms */
 #define SW_TMR_CNT_PER_MS      10
