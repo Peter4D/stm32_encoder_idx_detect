@@ -123,17 +123,16 @@ void Error_Handler(void);
 /* because timer resolution is 0.1 ms */
 #define SW_TMR_CNT_PER_MS      10
 
-/* main loop pull peride for read end switch status */
-#define CH_PULL_READ_PER      (1)
+/* main loop pull peride for read end switch status (ms) */
+#define CH_PULL_READ_PER       1
 
 #define TASK_PERIODE    (uint32_t)(1000 * SW_TMR_CNT_PER_MS)
 
 /* resolution in 0.1 ms */
-#define DELAY_AFTER_IDX_CH0     (10000)
-#define DELAY_AFTER_IDX_CH1     (20000)
-#define DELAY_AFTER_IDX_CH2     (30000)
-#define DELAY_AFTER_IDX_CH3     (40000)
-
+#define DELAY_AFTER_IDX_CH0     10000
+#define DELAY_AFTER_IDX_CH1     20000
+#define DELAY_AFTER_IDX_CH2     30000
+#define DELAY_AFTER_IDX_CH3     40000
 
 /* USER CODE END Private defines */
 
