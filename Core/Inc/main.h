@@ -82,7 +82,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define TIM2_CNT 100
+#define TIM2_CNT 99
 #define led_Pin GPIO_PIN_13
 #define led_GPIO_Port GPIOC
 #define out0_Pin GPIO_PIN_0
