@@ -191,9 +191,9 @@ void TASK_serial_cmd_decode(void);
 
 /* @debug */
 void swTm_test_cb(void) {
-    //struct _idx_ch_desc_t *ch = &idx_ch_array[0];
+    struct _idx_ch_desc_t *ch = &idx_ch_array[0];
     
-    //HAL_GPIO_TogglePin(ch->gpio_io_out.port, ch->gpio_io_out.pin);
+    HAL_GPIO_TogglePin(ch->gpio_io_out.port, ch->gpio_io_out.pin);
 
     swTimer.set(&swTm_test, DELAY_AFTER_IDX_CH0);
 }
