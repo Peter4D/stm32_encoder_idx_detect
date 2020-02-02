@@ -191,9 +191,9 @@ void TASK_serial_cmd_decode(void);
 
 /* @debug */
 void swTm_test_cb(void) {
-    struct _idx_ch_desc_t *ch = &idx_ch_array[0];
+    //struct _idx_ch_desc_t *ch = &idx_ch_array[0];
     
-    HAL_GPIO_TogglePin(ch->gpio_io_out.port, ch->gpio_io_out.pin);
+    //HAL_GPIO_TogglePin(ch->gpio_io_out.port, ch->gpio_io_out.pin);
 
     swTimer.set(&swTm_test, DELAY_AFTER_IDX_CH0);
 }
@@ -224,8 +224,14 @@ void led_tm_cb(void) {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    /* @debug */
+    //struct _idx_ch_desc_t *ch = &idx_ch_array[0];
     /* drive software timers: resolition is 0.1 ms */
     swTimer_tick();
+
+    /* @debug*/
+    //HAL_GPIO_TogglePin(ch->gpio_io_out.port, ch->gpio_io_out.pin);
+
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
