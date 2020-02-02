@@ -83,6 +83,9 @@ static sw_timer_t xLed_tm;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
+/* @debug */
+void swTm_test_cb(void);
+
 void blink_onboard_led(uint32_t time_ms);
 void led_tm_cb(void);
 
@@ -160,6 +163,9 @@ struct _idx_ch_desc_t
     }
 };
 
+/* @debug */
+static sw_timer_t swTm_test;
+
 typedef enum{
     SM_RX_IDLE,
     SM_RX_RECEIVE,
@@ -183,6 +189,14 @@ void SM_goToIdle(struct _idx_ch_desc_t *ch);
 
 void TASK_serial_cmd_decode(void);
 
+/* @debug */
+void swTm_test_cb(void) {
+    struct _idx_ch_desc_t *ch = &idx_ch_array[0];
+    
+    HAL_GPIO_TogglePin(ch->gpio_io_out.port, ch->gpio_io_out.pin);
+
+    swTimer.set(&swTm_test, DELAY_AFTER_IDX_CH0);
+}
 
 void taskTimer_cb(void) {
     
@@ -292,6 +306,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
     static uint32_t tick_old = 0;
     uint8_t nCh = 0;
 
@@ -303,6 +318,11 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+
+    /* @debug*/
+    swTimer_init(&swTm_test);
+    swTimer.attach_callBack(&swTm_test, swTm_test_cb);
+    swTimer.set(&swTm_test, DELAY_AFTER_IDX_CH0);
 
     /* set application heartBeat and serial debug printout task */
     swTimer_init(&xTaskTimer);
@@ -422,8 +442,10 @@ void handle_channels(struct _idx_ch_desc_t *ch){
 //=========================================================
 /* software timers callback functions */
 void ch0_swTmr_cb(void){
-    
-    SM_goToIdle(&idx_ch_array[0]);
+    struct _idx_ch_desc_t *ch = &idx_ch_array[0];
+
+    HAL_GPIO_WritePin(ch->gpio_io_out.port, ch->gpio_io_out.pin, GPIO_PIN_RESET);
+    SM_goToIdle(ch);
 }
 
 void ch1_swTmr_cb(void){

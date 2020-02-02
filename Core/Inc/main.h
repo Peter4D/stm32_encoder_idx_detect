@@ -136,7 +136,7 @@ void Error_Handler(void);
 #define TASK_PERIODE    (uint32_t)(1000 * SW_TMR_CNT_PER_MS)
 
 /* resolution in 0.1 ms */
-#define DELAY_AFTER_IDX_CH0     10000
+#define DELAY_AFTER_IDX_CH0     5000
 #define DELAY_AFTER_IDX_CH1     20000
 #define DELAY_AFTER_IDX_CH2     30000
 #define DELAY_AFTER_IDX_CH3     40000
